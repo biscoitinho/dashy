@@ -25,16 +25,35 @@ set :views, File.join(__dir__, 'views')
 
 helpers TerminalHelpers
 
-CACHE     = {} # rubocop:disable Style/MutableConstant
-CACHE_TTL = 600
+CACHE       = {} # rubocop:disable Style/MutableConstant
+CACHE_MUTEX = Mutex.new
+CACHE_TTL   = 600
+
+REFRESH_COOLDOWN = 30
+LAST_REFRESH     = { at: Time.now - REFRESH_COOLDOWN } # rubocop:disable Style/MutableConstant
 
 def cached(key, ttl = CACHE_TTL)
-  entry = CACHE[key]
-  return entry[:data] if entry && (Time.now - entry[:at]) < ttl
+  CACHE_MUTEX.synchronize do
+    entry = CACHE[key]
+    return entry[:data] if entry && (Time.now - entry[:at]) < ttl
 
-  data = yield
-  CACHE[key] = { data: data, at: Time.now }
-  data
+    data = yield
+    CACHE[key] = { data: data, at: Time.now }
+    data
+  end
+end
+
+Thread.new do
+  loop do
+    sleep CACHE_TTL - 30 # refresh 30s before expiry
+    begin
+      cached(:ruby_news)  { Fetchers.ruby_news }
+      cached(:space_wx)   { Fetchers.space_weather }
+      cached(:air, 3600)  { Fetchers.air_quality }
+    rescue => e
+      warn "background prefetch error: #{e.class}: #{e.message}"
+    end
+  end
 end
 
 def dashboard_data
@@ -72,7 +91,13 @@ get '/data.json' do
 end
 
 get '/refresh' do
-  CACHE.clear
+  last = CACHE_MUTEX.synchronize { LAST_REFRESH[:at] }
+  halt 429, 'Too fast — wait 30s between refreshes' if Time.now - last < REFRESH_COOLDOWN
+
+  CACHE_MUTEX.synchronize do
+    CACHE.clear
+    LAST_REFRESH[:at] = Time.now
+  end
   redirect '/'
 end
 
