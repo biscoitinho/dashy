@@ -1,79 +1,110 @@
 # dashy
 
-Terminal-style dashboard — Ruby Weekly + Space Weather (HF propagation) + clock + cal.
+Terminal-style personal dashboard — ham radio space weather, air quality, HF band plan, Ruby tips and Ruby Weekly news. Available both in the browser and via `curl`.
 
-## Wymagania
+## Requirements
 
-- Ruby 2.7+
+- Ruby 3.0+
 - Bundler
+- WAQI API token (free) — https://aqicn.org/data-platform/token/
 
-## Start
+## Setup
 
 ```bash
+git clone https://github.com/biscoitinho/dashy.git
+cd dashy
 bundle install
-ruby app.rb
+cp .env.example .env
+# Edit .env and add your WAQI_TOKEN
 ```
 
-Domyślnie port **4567**. Zmień przez zmienną środowiskową:
+## Running
 
 ```bash
-PORT=8080 ruby app.rb
+source .env && ruby app.rb
 ```
 
-### Uruchamianie jako tło (na Mac Mini)
+Override the port if needed:
 
 ```bash
-# nohup
-nohup ruby app.rb > dashy.log 2>&1 &
-
-# albo launchd (macOS) — dodaj plist do ~/Library/LaunchAgents/
+PORT=8080 source .env && ruby app.rb
 ```
 
-## Użycie
+### Background (macOS)
 
 ```bash
-# przeglądarka
+nohup bash -c 'source .env && ruby app.rb' > dashy.log 2>&1 &
+```
+
+## Usage
+
+```bash
+# Browser
 open http://localhost:4567
 
-# curl — plain text z ASCII box drawing
+# Terminal — with ANSI colors
 curl http://localhost:4567
 
-# albo wprost:
-curl 'http://localhost:4567/?format=text'
+# Plain text (no colors — good for pipes and logs)
+curl 'http://localhost:4567/?plain=1'
 
-# raw JSON
+# Match your terminal width
+curl "http://localhost:4567/?width=$(tput cols)"
+
+# Handy alias — add to ~/.zshrc
+alias dashy='curl "http://localhost:4567/?width=$(tput cols)"'
+
+# Force cache refresh
+curl http://localhost:4567/refresh
+
+# Raw JSON
 curl http://localhost:4567/data.json | jq
 
-# wymuś odświeżenie cache
-curl http://localhost:4567/refresh
+# Diagnostics
+curl http://localhost:4567/debug/air
+curl http://localhost:4567/debug/noaa
 ```
 
-## Dane
+## Data sources
 
-| Źródło       | Endpoint                                          | Odświeżanie |
-|--------------|---------------------------------------------------|-------------|
-| Ruby Weekly  | `https://rubyweekly.com/rss`                      | 10 min      |
-| Solar flux   | NOAA SWPC `/products/summary/10cm-flux.json`      | 10 min      |
-| Kp index     | NOAA SWPC `/products/noaa-planetary-k-index.json` | 10 min      |
-| Geomag       | NOAA SWPC `/products/summary/geomag-field.json`   | 10 min      |
-| Solar wind   | NOAA SWPC `/products/summary/solar-wind-speed.json`| 10 min     |
+| Section | Source | Cache |
+|---------|--------|-------|
+| Space weather | N0NBH / hamqsl.com (same as solar.w5mmw.net) | 10 min |
+| HF band conditions | N0NBH XML | 10 min |
+| Air quality | WAQI — geo near Rumia/Trójmiasto | 1 hour |
+| Ruby Weekly | rubyweekly.com RSS + /issues scrape | 10 min |
+| Ruby tip of the day | Built-in pool of 71 tips, rotates daily | static |
+| HF band plan | IARU Region 1 + CB, hardcoded | static |
+| Calendar | System `cal` command | per request |
 
-## Struktura
+## Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `WAQI_TOKEN` | Yes | WAQI API token from aqicn.org |
+| `PORT` | No | HTTP port (default: 4567) |
+
+## Project structure
 
 ```
-dashboard/
+dashy/
+├── app.rb                  # Sinatra app, routing, cache
 ├── Gemfile
-├── app.rb              # Sinatra, routing, cache
+├── .env.example            # Environment variable template
 ├── lib/
-│   └── fetchers.rb     # RSS + NOAA parsers
+│   ├── fetchers.rb         # HTTP fetchers — WAQI, hamqsl, Ruby Weekly
+│   ├── band_plan.rb        # Static IARU R1 + CB band plan data
+│   ├── ruby_tips.rb        # 71 rotating Ruby tips
+│   └── terminal_helpers.rb # ANSI colors, box drawing, Sinatra helpers
 └── views/
-    ├── layout.erb      # HTML shell, terminal CSS
-    ├── index.erb       # główny widok HTML
-    └── index_text.erb  # curl / plain text output
+    ├── layout.erb          # HTML shell and CSS
+    ├── index.erb           # Browser view
+    └── index_text.erb      # curl / plain text view
 ```
 
-## Dodawanie nowych sekcji
+## Adding a new section
 
-1. Dopisz fetcher w `lib/fetchers.rb`
-2. Dodaj do `dashboard_data` w `app.rb`
-3. Dopisz panel w `views/index.erb` i blok w `views/index_text.erb`
+1. Add a fetcher in `lib/fetchers.rb`
+2. Add it to `dashboard_data` in `app.rb`
+3. Add a render block in `lib/terminal_helpers.rb`
+4. Call it in `views/index_text.erb` and `views/index.erb`
