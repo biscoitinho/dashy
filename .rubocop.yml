@@ -64,3 +64,12 @@ Style/LambdaCall:
 # Frozen string literal — opcjonalne dla Sinatra app
 Style/FrozenStringLiteralComment:
   Enabled: false
+
+# %q() jest potrzebne dla stringów z cudzysłowami i #{} jako literałem
+Style/RedundantPercentQ:
+  Enabled: false
+
+# ruby_tips.rb zawiera przykłady kodu Ruby — #{} w '...' jest celowe
+Lint/InterpolationCheck:
+  Exclude:
+    - 'lib/ruby_tips.rb'
