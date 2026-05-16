@@ -12,11 +12,12 @@ module Fetchers
 
   HEADERS = {
     'User-Agent' => 'dashy/1.0 SP2MAG (local ham radio dashboard)',
-    'Accept'     => 'text/xml, application/xml, application/rss+xml, */*'
+    'Accept' => 'text/xml, application/xml, application/rss+xml, */*'
   }.freeze
 
   def self.fetch(url, timeout: 12, redirects: 5)
     raise 'Too many redirects' if redirects.zero?
+
     uri  = URI(url)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl      = (uri.scheme == 'https')
@@ -43,6 +44,7 @@ module Fetchers
   def self.fetch_json(url)
     body = fetch(url)
     return nil unless body
+
     if body.lstrip.start_with?('<')
       warn "fetch_json: got HTML/XML from #{url}"
       return nil
@@ -56,9 +58,7 @@ module Fetchers
   # ── Ruby Weekly ────────────────────────────────────────────────────────────
   def self.ruby_news(limit: 10)
     items = ruby_news_from_rss(limit)
-    if items.size < limit
-      items += ruby_news_from_issues(limit - items.size, skip: items.map { |i| i[:link] })
-    end
+    items += ruby_news_from_issues(limit - items.size, skip: items.map { |i| i[:link] }) if items.size < limit
     items
   rescue => e
     warn "ruby_news error: #{e.class}: #{e.message}"
@@ -68,6 +68,7 @@ module Fetchers
   def self.ruby_news_from_rss(limit)
     body = fetch(RUBY_WEEKLY_RSS)
     return [] unless body
+
     doc   = REXML::Document.new(body)
     items = []
     doc.elements.each('rss/channel/item') do |item|
@@ -86,12 +87,15 @@ module Fetchers
   def self.ruby_news_from_issues(limit, skip: [])
     body = fetch(RUBY_WEEKLY_ISSUES)
     return [] unless body
+
     items = []
     body.scan(%r{href="(/issues/(\d+))"[^>]*>([^<]+)<}i) do |path, num, title|
       clean = title.strip.gsub(/\s+/, ' ')
       next if clean.length < 10 || clean =~ /\A[\d\s#]+\z/
+
       link = "https://rubyweekly.com#{path}"
       next if skip.include?(link)
+
       items << { title: clean, link: link, date: "##{num}", snippet: nil }
       break if items.size >= limit
     end
@@ -112,8 +116,8 @@ module Fetchers
 
     el = ->(tag) { data.elements[tag]&.text&.strip }
 
-    solar_flux = el.('solarflux')&.to_f
-    kp         = el.('kindex')&.to_f
+    solar_flux = el.call('solarflux')&.to_f
+    kp         = el.call('kindex')&.to_f
 
     bands = {}
     doc.elements.each('solar/solardata/calculatedconditions/band') do |b|
@@ -125,19 +129,19 @@ module Fetchers
 
     {
       solar_flux:  solar_flux,
-      sunspots:    el.('sunspots')&.to_i,
+      sunspots:    el.call('sunspots')&.to_i,
       kp_index:    kp,
-      a_index:     el.('aindex')&.to_f,
-      x_ray:       el.('xray'),
-      solar_wind:  el.('solarwind')&.to_f,
-      mag_field:   el.('magneticfield')&.to_f,
-      aurora:      el.('aurora')&.to_i,
-      aurora_lat:  el.('latdegree')&.to_f,
-      helium:      el.('heliumline')&.to_f,
+      a_index:     el.call('aindex')&.to_f,
+      x_ray:       el.call('xray'),
+      solar_wind:  el.call('solarwind')&.to_f,
+      mag_field:   el.call('magneticfield')&.to_f,
+      aurora:      el.call('aurora')&.to_i,
+      aurora_lat:  el.call('latdegree')&.to_f,
+      helium:      el.call('heliumline')&.to_f,
       geomag:      kp_to_storm(kp),
       propagation: propagation_assessment(solar_flux, kp),
       bands:       bands,
-      updated:     el.('updated') || Time.now.strftime('%d %b %Y %H%M GMT'),
+      updated:     el.call('updated') || Time.now.strftime('%d %b %Y %H%M GMT'),
       source:      'N0NBH/hamqsl.com (solar.w5mmw.net)'
     }
   rescue => e
@@ -151,6 +155,7 @@ module Fetchers
 
   def self.kp_to_storm(kp)
     return 'N/A' if kp.nil?
+
     if    kp >= 8 then 'Extreme (G5)'
     elsif kp >= 7 then 'Severe (G4)'
     elsif kp >= 6 then 'Strong (G3)'
@@ -164,6 +169,7 @@ module Fetchers
 
   def self.propagation_assessment(flux, kp)
     return { label: 'N/A', level: 0 } if flux.nil? && kp.nil?
+
     kp   ||= 0.0
     flux ||= 0.0
     if    kp >= 5     then { label: 'ZAKLOCONA (burza)',  level: -2 }
@@ -181,7 +187,7 @@ module Fetchers
   # Lokalizacja: Rumia > Szemud > fallback geo
   WAQI_TOKEN = ENV.fetch('WAQI_TOKEN') { raise 'Set WAQI_TOKEN env var — see .env.example' }.freeze
   WAQI_BASE  = 'https://api.waqi.info/feed'.freeze
-  WAQI_CITIES = ['geo:54.5726;18.3965'].freeze  # Rumia/Szemud nie ma stacji w WAQI
+  WAQI_CITIES = ['geo:54.5726;18.3965'].freeze # Rumia/Szemud nie ma stacji w WAQI
 
   def self.air_quality
     data = nil
@@ -191,7 +197,8 @@ module Fetchers
       url  = "#{WAQI_BASE}/#{city}/?token=#{WAQI_TOKEN}"
       resp = fetch_json(url)
       next unless resp.is_a?(Hash) && resp['status'] == 'ok' && resp['data'].is_a?(Hash)
-      next unless resp['data']['aqi'].to_i > 0
+      next unless resp['data']['aqi'].to_i.positive?
+
       data      = resp['data']
       city_used = 'Rumia / Trójmiasto'
       break
