@@ -18,7 +18,7 @@ module RubyTips
       note:  'chomp removes trailing newline: "line\\n".chomp  # => "line"' },
 
     { title: 'String interpolation',
-      code:  %(name = "world"; "Hello #{name.upcase}!"),
+      code:  'name = "world"; "Hello #{name.upcase}!"',
       note:  'any expression works inside  — calls .to_s automatically' },
 
     { title: 'Multiline string with heredoc',
@@ -110,7 +110,7 @@ module RubyTips
       note:  'transform_keys works the same on keys — both return new hash' },
 
     { title: 'filter_map on hash',
-      code:  %({a:1, b:nil, c:3}.filter_map { |k,v| "#{k}=#{v}" if v }),
+      code:  '{a:1, b:nil, c:3}.filter_map { |k,v| "#{k}=#{v}" if v }',
       note:  'select + map in one pass — available since Ruby 2.7' },
 
     { title: 'Hash#slice',
@@ -151,7 +151,7 @@ module RubyTips
       note:  'symbol shorthand for simple operations; block for custom logic' },
 
     { title: 'Enumerable#zip with block',
-      code:  %{[1,2,3].zip([4,5,6]) { |a,b| puts "#{a}+#{b}=#{a + b}" }},
+      code:  '[1,2,3].zip([4,5,6]) { |a,b| puts "#{a}+#{b}=#{a + b}" }',
       note:  'with a block zip returns nil and just iterates — no intermediate array' },
 
     { title: 'filter_map',
@@ -172,7 +172,7 @@ module RubyTips
       note:  'tap yields self and returns self — zero impact on the chain' },
 
     { title: 'then / yield_self',
-      code:  %("hello".then { |s| s.upcase }.then { |s| "#{s}!" }  # => "HELLO!"),
+      code:  '"hello".then { |s| s.upcase }.then { |s| "#{s}!" }  # => "HELLO!"',
       note:  'unlike tap, then returns block result — great for pipelines' },
 
     { title: 'Method objects as procs',
@@ -219,11 +219,11 @@ module RubyTips
       note:  'Ruby 3.0+ — rightward assignment: data => { name: } also works' },
 
     { title: 'Endless method (Ruby 3.0+)',
-      code:  %{def double(x) = x * 2\ndef greet(name) = "Hello, #{name}!"},
+      code:  'def double(x) = x * 2\ndef greet(name) = "Hello, #{name}!"',
       note:  'single-expression methods without end — concise for simple helpers' },
 
     { title: 'Numbered block params (Ruby 2.7+)',
-      code:  %([1,2,3].map { _1 * 2 }     # => [2,4,6]\nhash.map { "#{_1}: #{_2}" }),
+      code:  %q([1,2,3].map { _1 * 2 }     # => [2,4,6]\nhash.map { "#{_1}: #{_2}" }),
       note:  '_1, _2 etc replace named params — concise for simple blocks' },
 
     { title: 'Hash shorthand (Ruby 3.1+)',
