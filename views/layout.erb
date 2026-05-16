@@ -112,6 +112,8 @@
       const et=document.getElementById('clock-time'), ed=document.getElementById('clock-date');
       if(et) et.textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
       if(ed) ed.textContent=`${days[n.getDay()]}, ${n.getDate()} ${mons[n.getMonth()]} ${n.getFullYear()}`;
+      const eu = document.getElementById('clock-utc');
+      if(eu) eu.textContent = `${p(n.getUTCHours())}:${p(n.getUTCMinutes())} UTC`;
     }
     setInterval(tick,1000); tick();
     document.addEventListener('DOMContentLoaded',()=>{

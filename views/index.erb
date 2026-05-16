@@ -14,6 +14,15 @@
     <div class="panel-title">clock</div>
     <div id="clock-time">--:--:--</div>
     <div id="clock-date"></div>
+    <div id="clock-utc" style="color:var(--amber);font-size:.9em">--:-- UTC</div>
+    <% sun = @d[:sun] || {} %>
+    <div style="margin-top:8px;font-size:.82em;color:var(--dim)">
+      <span>&#x2600; <%= sun[:sunrise] || '--:--' %></span>
+      <span style="margin:0 8px">&middot;</span>
+      <span>&#x263E; <%= sun[:sunset] || '--:--' %></span>
+      <span style="margin:0 8px">&middot;</span>
+      <span><%= sun[:day_length] || '--' %></span>
+    </div>
   </div>
 
   <div class="panel">
@@ -70,6 +79,16 @@
     <span class="wx-label">Propagacja HF</span>
     <span class="<%= pcls %>"><strong><%= prop[:label] || 'N/A' %></strong></span>
   </div>
+  <% kpf = @d[:kp_forecast] || {} %>
+  <% if kpf[:max_kp_24h] %>
+  <div class="wx-row" style="margin-top:6px">
+    <span class="wx-label">Max Kp/24h</span>
+    <span class="<%= kpf[:max_kp_24h].to_f >= 5 ? 'prop-bad' : kpf[:max_kp_24h].to_f >= 3 ? 'prop-ok' : 'prop-good' %>">
+      <%= kpf[:max_kp_24h] %>
+      <% if kpf[:alert_time] %><span style="color:var(--dim);font-size:.82em"> &middot; burza <%= kpf[:alert_time] %> (Kp <%= kpf[:alert_kp] %>)</span><% end %>
+    </span>
+  </div>
+  <% end %>
   <% unless bands.empty? %>
   <div class="wx-section-label" style="margin-top:12px">PASMA HF — ☀ DZIEŃ / ☾ NOC</div>
   <div class="bands-grid">
@@ -124,6 +143,66 @@
   <% end %>
 </div>
 <% end %>
+
+<!-- DX CLUSTER -->
+<div class="panel" style="margin-bottom:16px">
+  <div class="panel-title">dx cluster // dxsummit.fi</div>
+  <% dx = @d[:dx_spots] || [] %>
+  <% if dx.empty? %>
+    <div style="color:var(--dim)">brak spot&oacute;w</div>
+  <% else %>
+    <table class="bp-table">
+      <thead><tr><th>DX</th><th>Freq</th><th>Band</th><th>DE</th><th>Info</th><th>Time</th></tr></thead>
+      <tbody>
+      <% dx.each do |s| %>
+        <tr>
+          <td class="bp-band"><%= s[:dx] %></td>
+          <td class="bp-range"><%= s[:freq] %></td>
+          <td><%= s[:band] %></td>
+          <td style="color:var(--dim)"><%= s[:de] %></td>
+          <td style="color:var(--dim);font-size:.82em"><%= s[:info] %></td>
+          <td style="color:var(--dim)"><%= s[:time] %></td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>
+
+<!-- SOTA / POTA -->
+<div class="panel" style="margin-bottom:16px">
+  <div class="panel-title">sota / pota // aktywne stacje</div>
+  <% sp = @d[:sota_pota] || {} %>
+  <% sota = sp[:sota] || []; pota = sp[:pota] || [] %>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div>
+      <div class="wx-section-label">SOTA</div>
+      <% if sota.empty? %>
+        <div style="color:var(--dim);font-size:.82em">brak aktywacji</div>
+      <% else %>
+        <% sota.each do |s| %>
+        <div class="news-item">
+          <div><span class="bp-band"><%= s[:call] %></span> <span style="color:var(--amber)"><%= s[:freq] %> MHz</span> <span style="color:var(--dim);font-size:.8em"><%= s[:mode] %></span></div>
+          <div style="color:var(--dim);font-size:.78em"><%= s[:ref] %> &middot; <%= s[:name] %> &middot; <%= s[:time] %></div>
+        </div>
+        <% end %>
+      <% end %>
+    </div>
+    <div>
+      <div class="wx-section-label">POTA</div>
+      <% if pota.empty? %>
+        <div style="color:var(--dim);font-size:.82em">brak aktywacji</div>
+      <% else %>
+        <% pota.each do |s| %>
+        <div class="news-item">
+          <div><span class="bp-band"><%= s[:call] %></span> <span style="color:var(--amber)"><%= s[:freq] %> MHz</span> <span style="color:var(--dim);font-size:.8em"><%= s[:mode] %></span></div>
+          <div style="color:var(--dim);font-size:.78em"><%= s[:ref] %> &middot; <%= s[:name] %> &middot; <%= s[:time] %></div>
+        </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>
 
 <!-- RUBY WEEKLY -->
 <div class="panel">

@@ -8,6 +8,8 @@ $LOAD_PATH.unshift File.join(__dir__, '..', 'lib')
 require_relative '../lib/fetchers/base'
 require_relative '../lib/fetchers/space_weather'
 require_relative '../lib/fetchers/air_quality'
+require_relative '../lib/fetchers/sun_times'
+require_relative '../lib/fetchers/dx_cluster'
 require_relative '../lib/band_plan'
 require_relative '../lib/ruby_tips'
 
@@ -224,6 +226,149 @@ class TestRubyTipsToday < Minitest::Test
   def test_does_not_crash
     RubyTips.today
     pass
+  end
+end
+
+class TestSunTimesFormatDuration < Minitest::Test
+  def test_zero_seconds
+    assert_equal '0h 0m', Fetchers::SunTimes.format_duration(0)
+  end
+
+  def test_one_hour
+    assert_equal '1h 0m', Fetchers::SunTimes.format_duration(3600)
+  end
+
+  def test_one_hour_thirty_min
+    assert_equal '1h 30m', Fetchers::SunTimes.format_duration(5400)
+  end
+
+  def test_long_day
+    assert_equal '17h 3m', Fetchers::SunTimes.format_duration(61_380)
+  end
+end
+
+class TestSunTimesDecimalToTime < Minitest::Test
+  def test_basic_conversion
+    date = Date.new(2025, 6, 21)
+    t = Fetchers::SunTimes.decimal_to_time(date, 6.5)
+    assert_equal 6, t.hour
+    assert_equal 30, t.min
+  end
+
+  def test_minute_rollover
+    date = Date.new(2025, 6, 21)
+    t = Fetchers::SunTimes.decimal_to_time(date, 5.9999)
+    assert_equal 6, t.hour
+    assert_equal 0, t.min
+  end
+
+  def test_midnight_wraps
+    date = Date.new(2025, 6, 21)
+    t = Fetchers::SunTimes.decimal_to_time(date, 24.0)
+    assert_equal 0, t.hour
+  end
+end
+
+class TestSunTimesCalculate < Minitest::Test
+  def test_returns_two_element_array
+    result = Fetchers::SunTimes.calculate(54.6076, 18.2350, Date.new(2025, 6, 21))
+    assert_equal 2, result.size
+  end
+
+  def test_returns_times_for_wejherowo_summer
+    rise, set = Fetchers::SunTimes.calculate(54.6076, 18.2350, Date.new(2025, 6, 21))
+    refute_nil rise
+    refute_nil set
+    assert rise.is_a?(Time)
+    assert set.is_a?(Time)
+    assert set > rise, 'sunset should be after sunrise'
+  end
+
+  def test_for_today_returns_expected_keys
+    result = Fetchers::SunTimes.for_today
+    assert result.key?(:sunrise)
+    assert result.key?(:sunset)
+    assert result.key?(:day_length)
+  end
+
+  def test_for_today_sunrise_format
+    result = Fetchers::SunTimes.for_today
+    assert_match(/\A\d{2}:\d{2}\z/, result[:sunrise]) if result[:sunrise]
+  end
+
+  def test_for_today_day_length_format
+    result = Fetchers::SunTimes.for_today
+    assert_match(/\A\d+h \d+m\z/, result[:day_length]) if result[:day_length]
+  end
+end
+
+class TestDxClusterKhzToBand < Minitest::Test
+  def test_160m
+    assert_equal '160m', Fetchers::DxCluster.khz_to_band(1850)
+  end
+
+  def test_80m
+    assert_equal '80m', Fetchers::DxCluster.khz_to_band(3600)
+  end
+
+  def test_40m
+    assert_equal '40m', Fetchers::DxCluster.khz_to_band(7100)
+  end
+
+  def test_30m
+    assert_equal '30m', Fetchers::DxCluster.khz_to_band(10_125)
+  end
+
+  def test_20m
+    assert_equal '20m', Fetchers::DxCluster.khz_to_band(14_200)
+  end
+
+  def test_17m
+    assert_equal '17m', Fetchers::DxCluster.khz_to_band(18_100)
+  end
+
+  def test_15m
+    assert_equal '15m', Fetchers::DxCluster.khz_to_band(21_200)
+  end
+
+  def test_12m
+    assert_equal '12m', Fetchers::DxCluster.khz_to_band(24_940)
+  end
+
+  def test_10m
+    assert_equal '10m', Fetchers::DxCluster.khz_to_band(28_500)
+  end
+
+  def test_6m
+    assert_equal '6m', Fetchers::DxCluster.khz_to_band(51_000)
+  end
+
+  def test_unknown_returns_mhz
+    result = Fetchers::DxCluster.khz_to_band(145_000)
+    assert_match(/MHz/, result)
+  end
+
+  def test_boundary_160m_lower
+    assert_equal '160m', Fetchers::DxCluster.khz_to_band(1800)
+  end
+
+  def test_boundary_20m_upper
+    assert_equal '20m', Fetchers::DxCluster.khz_to_band(14_350)
+  end
+end
+
+class TestDxClusterParseTime < Minitest::Test
+  def test_nil_returns_placeholder
+    assert_equal '--:--', Fetchers::DxCluster.parse_time(nil)
+  end
+
+  def test_invalid_string_returns_placeholder
+    assert_equal '--:--', Fetchers::DxCluster.parse_time('not a time')
+  end
+
+  def test_valid_iso_returns_formatted_time
+    result = Fetchers::DxCluster.parse_time('2025-06-21T12:30:00Z')
+    assert_match(/\A\d{2}:\d{2}\z/, result)
   end
 end
 
