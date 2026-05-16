@@ -13,7 +13,7 @@
 <%= t_box_top('SOTA / POTA  //  aktywne stacje') %><%= t_sota_pota_block(@d[:sota_pota] || {}) %><%= t_box_bot %>
 <%= t_box_top('RUBY TIP OF THE DAY') %><%= t_tip_block(@d[:ruby_tip]) %><%= t_box_bot %>
 <%= t_box_top('RUBY WEEKLY') %><%= t_news_block(@d[:ruby_news]) %><%= t_box_bot %>
-<%= t_dim("  curl localhost:4567                         # z kolorami
-") %><%= t_dim("  curl 'localhost:4567/?plain=1'              # bez kolorow
-") %><%= t_dim("  curl 'localhost:4567/?width=\$(tput cols)'   # szerokosc
+<%= t_dim("  curl localhost:4567                         # with colours
+") %><%= t_dim("  curl 'localhost:4567/?plain=1'              # without colours
+") %><%= t_dim("  curl 'localhost:4567/?width=\$(tput cols)'   # width
 ") %>
