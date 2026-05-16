@@ -1,0 +1,66 @@
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.3
+  Exclude:
+    - 'vendor/**/*'
+
+# Metryki — rozsądne limity dla małego dashboardu
+Metrics/MethodLength:
+  Max: 40
+Metrics/AbcSize:
+  Max: 60
+Metrics/CyclomaticComplexity:
+  Max: 20
+Metrics/PerceivedComplexity:
+  Max: 20
+Metrics/BlockLength:
+  Max: 80
+Metrics/ModuleLength:
+  Max: 300
+Metrics/CollectionLiteralLength:
+  LengthThreshold: 100
+
+# Krótkie nazwy parametrów są OK — `t` dla text, `s` dla string, `kp` dla K-index
+Naming/MethodParameterName:
+  MinNameLength: 1
+
+# Wyrównanie hashy — pozwalamy na wyrównanie przez wartości (styl używany w projekcie)
+Layout/HashAlignment:
+  EnforcedColonStyle: table
+  EnforcedLastArgumentHashStyle: ignore_implicit
+
+# Długie linie — dashboard ma szeroki output
+Layout/LineLength:
+  Max: 120
+  AllowedPatterns:
+    - '\A\s*#'
+
+# Rescue bez klasy — akceptowalne w top-level fetch wrapperach
+Style/RescueStandardError:
+  Enabled: false
+
+# Dokumentacja — nie wymagamy
+Style/Documentation:
+  Enabled: false
+Style/DocumentationMethod:
+  Enabled: false
+
+# Formaty stringów — projekt miesza ' i "
+Style/StringLiterals:
+  EnforcedStyle: single_quotes
+  ConsistentQuotesInMultiline: false
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: single_quotes
+
+# Numerowane parametry bloku (_1) są używane w szablonach
+Style/NumberedParameters:
+  Enabled: false
+
+# Wywołania lambdy el.('tag') — poprawiamy do el.call('tag')
+Style/LambdaCall:
+  Enabled: true
+
+# Frozen string literal — opcjonalne dla Sinatra app
+Style/FrozenStringLiteralComment:
+  Enabled: false

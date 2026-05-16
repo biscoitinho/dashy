@@ -1,9 +1,11 @@
 # Wczytaj .env automatycznie jesli istnieje
+require 'English'
 env_file = File.join(__dir__, '.env')
 if File.exist?(env_file)
   File.readlines(env_file).each do |line|
     line = line.strip.sub(/^export\s+/, '')
     next if line.empty? || line.start_with?('#')
+
     key, val = line.split('=', 2)
     ENV[key] = val if key && val
   end
@@ -23,12 +25,13 @@ set :views, File.join(__dir__, 'views')
 
 helpers TerminalHelpers
 
-CACHE     = {}
+CACHE     = {} # rubocop:disable Style/MutableConstant
 CACHE_TTL = 600
 
 def cached(key, ttl = CACHE_TTL)
   entry = CACHE[key]
   return entry[:data] if entry && (Time.now - entry[:at]) < ttl
+
   data = yield
   CACHE[key] = { data: data, at: Time.now }
   data
@@ -36,15 +39,15 @@ end
 
 def dashboard_data
   {
-    ruby_news:  cached(:ruby_news)  { Fetchers.ruby_news },
-    space_wx:   cached(:space_wx)   { Fetchers.space_weather },
-    air:        cached(:air, 3600)  { Fetchers.air_quality },
-    band_plan:  BandPlan.all,
-    ruby_tip:   RubyTips.today,
-    cal:        `cal`.chomp,
-    time:       Time.now.strftime('%H:%M:%S %Z'),
-    date:       Time.now.strftime('%A, %d %B %Y'),
-    fetched:    Time.now.strftime('%H:%M')
+    ruby_news: cached(:ruby_news)  { Fetchers.ruby_news },
+    space_wx:  cached(:space_wx)   { Fetchers.space_weather },
+    air:       cached(:air, 3600)  { Fetchers.air_quality },
+    band_plan: BandPlan.all,
+    ruby_tip:  RubyTips.today,
+    cal:       `cal`.chomp,
+    time:      Time.now.strftime('%H:%M:%S %Z'),
+    date:      Time.now.strftime('%A, %d %B %Y'),
+    fetched:   Time.now.strftime('%H:%M')
   }
 end
 
@@ -80,6 +83,10 @@ end
 
 get '/debug/noaa' do
   content_type 'text/plain; charset=utf-8'
-  body = Fetchers.fetch(Fetchers::HAMQSL_XML) rescue "ERROR: #{$!}"
-  "URL: #{Fetchers::HAMQSL_XML}\n#{body ? "OK #{body.bytesize}b\n#{body.slice(0,400)}" : 'FAILED'}"
+  body = begin
+    Fetchers.fetch(Fetchers::HAMQSL_XML)
+  rescue
+    "ERROR: #{$ERROR_INFO}"
+  end
+  "URL: #{Fetchers::HAMQSL_XML}\n#{body ? "OK #{body.bytesize}b\n#{body.slice(0, 400)}" : 'FAILED'}"
 end

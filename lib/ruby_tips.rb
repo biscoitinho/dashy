@@ -18,8 +18,8 @@ module RubyTips
       note:  'chomp removes trailing newline: "line\\n".chomp  # => "line"' },
 
     { title: 'String interpolation',
-      code:  'name = "world"; "Hello #{name.upcase}!"',
-      note:  'any expression works inside #{} — calls .to_s automatically' },
+      code:  %(name = "world"; "Hello #{name.upcase}!"),
+      note:  'any expression works inside  — calls .to_s automatically' },
 
     { title: 'Multiline string with heredoc',
       code:  "text = <<~HEREDOC\n  indented\n  content\nHEREDOC",
@@ -79,11 +79,13 @@ module RubyTips
       note:  'sample(n) returns n unique random elements' },
 
     { title: 'each_slice and each_cons',
-      code:  '(1..6).each_slice(2).to_a   # => [[1,2],[3,4],[5,6]]\n(1..4).each_cons(2).to_a    # => [[1,2],[2,3],[3,4]]',
+      code:  "(1..6).each_slice(2).to_a   # => [[1,2],[3,4],[5,6]]\n" \
+             '(1..4).each_cons(2).to_a    # => [[1,2],[2,3],[3,4]]',
       note:  'slice chunks non-overlapping; cons slides a window' },
 
     { title: 'Array#combination and permutation',
-      code:  '[1,2,3].combination(2).to_a   # => [[1,2],[1,3],[2,3]]\n[1,2,3].permutation(2).to_a  # => [[1,2],[1,3],[2,1],...]',
+      code:  "[1,2,3].combination(2).to_a   # => [[1,2],[1,3],[2,3]]\n" \
+             '[1,2,3].permutation(2).to_a  # => [[1,2],[1,3],[2,1],...]',
       note:  'built-in combinatorics without any gem' },
 
     { title: 'Flatten with flat_map',
@@ -108,7 +110,7 @@ module RubyTips
       note:  'transform_keys works the same on keys — both return new hash' },
 
     { title: 'filter_map on hash',
-      code:  '{a:1, b:nil, c:3}.filter_map { |k,v| "#{k}=#{v}" if v }',
+      code:  %({a:1, b:nil, c:3}.filter_map { |k,v| "#{k}=#{v}" if v }),
       note:  'select + map in one pass — available since Ruby 2.7' },
 
     { title: 'Hash#slice',
@@ -149,7 +151,7 @@ module RubyTips
       note:  'symbol shorthand for simple operations; block for custom logic' },
 
     { title: 'Enumerable#zip with block',
-      code:  '[1,2,3].zip([4,5,6]) { |a,b| puts "#{a}+#{b}=#{a+b}" }',
+      code:  %{[1,2,3].zip([4,5,6]) { |a,b| puts "#{a}+#{b}=#{a + b}" }},
       note:  'with a block zip returns nil and just iterates — no intermediate array' },
 
     { title: 'filter_map',
@@ -170,7 +172,7 @@ module RubyTips
       note:  'tap yields self and returns self — zero impact on the chain' },
 
     { title: 'then / yield_self',
-      code:  '"hello".then { |s| s.upcase }.then { |s| "#{s}!" }  # => "HELLO!"',
+      code:  %("hello".then { |s| s.upcase }.then { |s| "#{s}!" }  # => "HELLO!"),
       note:  'unlike tap, then returns block result — great for pipelines' },
 
     { title: 'Method objects as procs',
@@ -212,15 +214,16 @@ module RubyTips
       note:  'avoids NoMethodError chains — introduced in Ruby 2.3' },
 
     { title: 'Pattern matching',
-      code:  'case response\nin { status: 200, body: String => b } then puts b\nin { status: 404 } then puts "not found"\nend',
+      code:  "case response\nin { status: 200, body: String => b } then puts b\n" \
+             'in { status: 404 } then puts "not found"\nend',
       note:  'Ruby 3.0+ — rightward assignment: data => { name: } also works' },
 
     { title: 'Endless method (Ruby 3.0+)',
-      code:  'def double(x) = x * 2\ndef greet(name) = "Hello, #{name}!"',
+      code:  %{def double(x) = x * 2\ndef greet(name) = "Hello, #{name}!"},
       note:  'single-expression methods without end — concise for simple helpers' },
 
     { title: 'Numbered block params (Ruby 2.7+)',
-      code:  '[1,2,3].map { _1 * 2 }     # => [2,4,6]\nhash.map { "#{_1}: #{_2}" }',
+      code:  %([1,2,3].map { _1 * 2 }     # => [2,4,6]\nhash.map { "#{_1}: #{_2}" }),
       note:  '_1, _2 etc replace named params — concise for simple blocks' },
 
     { title: 'Hash shorthand (Ruby 3.1+)',
@@ -290,11 +293,11 @@ module RubyTips
 
     { title: 'Kernel#loop with StopIteration',
       code:  'e = [1,2,3].each\nloop { puts e.next }  # stops automatically',
-      note:  'loop rescues StopIteration — the idiomatic way to drain an enumerator' },
+      note:  'loop rescues StopIteration — the idiomatic way to drain an enumerator' }
   ].freeze
 
   # Rotacja dzienna — inny tip każdego dnia
   def self.today
-    TIPS[Date.today.yday % TIPS.size]
+    TIPS[(Date.today.yday - 1) % TIPS.size]
   end
 end
