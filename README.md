@@ -75,6 +75,13 @@ curl http://localhost:4567/debug/air
 curl http://localhost:4567/debug/noaa
 ```
 
+## Tests
+
+```bash
+bundle exec ruby -Itest test/test_logic.rb
+bundle exec ruby -Itest test/test_cache.rb
+```
+
 ## Data sources
 
 | Section | Source | Cache |
