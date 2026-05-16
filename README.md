@@ -18,22 +18,32 @@ cp .env.example .env
 # Edit .env and add your WAQI_TOKEN
 ```
 
+## Configuration
+
+Copy `.env.example` to `.env` and fill in your token:
+
+```
+WAQI_TOKEN=your_token_here
+```
+
+Ruby loads `.env` automatically on startup — no need to `source` anything.
+
 ## Running
 
 ```bash
-source .env && ruby app.rb
+ruby app.rb
 ```
 
 Override the port if needed:
 
 ```bash
-PORT=8080 source .env && ruby app.rb
+PORT=8080 ruby app.rb
 ```
 
 ### Background (macOS)
 
 ```bash
-nohup bash -c 'source .env && ruby app.rb' > dashy.log 2>&1 &
+nohup ruby app.rb > dashy.log 2>&1 &
 ```
 
 ## Usage
@@ -88,9 +98,10 @@ curl http://localhost:4567/debug/noaa
 
 ```
 dashy/
-├── app.rb                  # Sinatra app, routing, cache
+├── app.rb                  # Sinatra app, routing, cache, .env loader
 ├── Gemfile
 ├── .env.example            # Environment variable template
+├── .gitignore
 ├── lib/
 │   ├── fetchers.rb         # HTTP fetchers — WAQI, hamqsl, Ruby Weekly
 │   ├── band_plan.rb        # Static IARU R1 + CB band plan data

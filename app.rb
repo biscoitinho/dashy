@@ -1,3 +1,14 @@
+# Wczytaj .env automatycznie jesli istnieje
+env_file = File.join(__dir__, '.env')
+if File.exist?(env_file)
+  File.readlines(env_file).each do |line|
+    line = line.strip.sub(/^export\s+/, '')
+    next if line.empty? || line.start_with?('#')
+    key, val = line.split('=', 2)
+    ENV[key] = val if key && val
+  end
+end
+
 require 'sinatra'
 require 'json'
 require 'date'
