@@ -1,0 +1,145 @@
+<%
+  wx    = @d[:space_wx] || {}
+  prop  = wx[:propagation] || {}
+  bands = wx[:bands] || {}
+  air   = @d[:air]
+  tip   = @d[:ruby_tip]
+  plvl  = prop[:level] || 0
+  pcls  = plvl >= 2 ? 'prop-good' : plvl >= 0 ? 'prop-ok' : 'prop-bad'
+%>
+
+<!-- ROW 1: Clock + Calendar + Air Quality -->
+<div class="grid-3" style="margin-bottom:16px">
+  <div class="panel">
+    <div class="panel-title">clock</div>
+    <div id="clock-time">--:--:--</div>
+    <div id="clock-date"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">cal</div>
+    <div id="cal-output"><%= @d[:cal] %></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">air quality // GIOŚ</div>
+    <% if air %>
+      <div style="color:var(--dim);font-size:.78em;margin-bottom:6px"><%= air[:station] %></div>
+      <%
+        lbl  = air[:aqi_pm25]
+        acls = lbl ? (lbl[:level] <= 1 ? 'prop-good' : lbl[:level] <= 3 ? 'prop-ok' : 'prop-bad') : ''
+      %>
+      <div class="wx-row"><span class="wx-label">PM2.5</span><span class="wx-val"><%= air[:pm25] ? "#{air[:pm25]} μg/m³" : 'N/A' %></span></div>
+      <div class="wx-row"><span class="wx-label">PM10</span> <span class="wx-val"><%= air[:pm10] ? "#{air[:pm10]} μg/m³" : 'N/A' %></span></div>
+      <div class="wx-row"><span class="wx-label">NO₂</span>  <span class="wx-val"><%= air[:no2]  ? "#{air[:no2]} μg/m³"  : 'N/A' %></span></div>
+      <div class="wx-row"><span class="wx-label">O₃</span>   <span class="wx-val"><%= air[:o3]   ? "#{air[:o3]} μg/m³"   : 'N/A' %></span></div>
+      <div class="wx-row"><span class="wx-label">AQI</span><span class="wx-val"><%= air[:aqi] || 'N/A' %></span></div>
+      <div style="margin-top:6px">
+        <span style="color:var(--dim);font-size:.8em">Status: </span>
+        <span class="<%= acls %>"><strong><%= (air[:aqi_lvl] || lbl)&.dig(:label) || 'N/A' %></strong></span>
+      </div>
+      <div style="color:var(--dim);font-size:.72em;margin-top:6px">aktualizacja: <%= air[:updated] %></div>
+    <% else %>
+      <div style="color:var(--dim)">brak danych</div>
+    <% end %>
+  </div>
+</div>
+
+<!-- SPACE WEATHER -->
+<div class="panel" style="margin-bottom:16px">
+  <div class="panel-title">space weather // N0NBH / solar.w5mmw.net</div>
+  <div class="wx-grid">
+    <div>
+      <div class="wx-section-label">SOLAR</div>
+      <div class="wx-row"><span class="wx-label">Solar Flux</span><span class="wx-val"><%= wx[:solar_flux] || 'N/A' %> sfu</span></div>
+      <div class="wx-row"><span class="wx-label">Sunspots</span>  <span class="wx-val"><%= wx[:sunspots]   || 'N/A' %></span></div>
+      <div class="wx-row"><span class="wx-label">X-Ray</span>     <span class="wx-val"><%= wx[:x_ray]      || 'N/A' %></span></div>
+      <div class="wx-row"><span class="wx-label">304 Å</span>     <span class="wx-val"><%= wx[:helium]     || 'N/A' %></span></div>
+    </div>
+    <div>
+      <div class="wx-section-label">GEOMAG / WIATR</div>
+      <div class="wx-row"><span class="wx-label">Kp Index</span>  <span class="wx-val"><%= wx[:kp_index]    || 'N/A' %></span></div>
+      <div class="wx-row"><span class="wx-label">A-Index</span>   <span class="wx-val"><%= wx[:a_index]     || 'N/A' %></span></div>
+      <div class="wx-row"><span class="wx-label">Storm</span>     <span class="wx-val"><%= wx[:geomag]      || 'N/A' %></span></div>
+      <div class="wx-row"><span class="wx-label">Solar wind</span><span class="wx-val"><%= wx[:solar_wind]  ? "#{wx[:solar_wind].to_i} km/s" : 'N/A' %></span></div>
+      <div class="wx-row"><span class="wx-label">Bz</span>        <span class="wx-val"><%= wx[:mag_field]   ? "#{wx[:mag_field]} nT" : 'N/A' %></span></div>
+      <div class="wx-row"><span class="wx-label">Aurora</span>    <span class="wx-val"><%= wx[:aurora] ? "#{wx[:aurora]}/100  lat #{wx[:aurora_lat]}°" : 'N/A' %></span></div>
+    </div>
+  </div>
+  <div class="prop-row">
+    <span class="wx-label">Propagacja HF</span>
+    <span class="<%= pcls %>"><strong><%= prop[:label] || 'N/A' %></strong></span>
+  </div>
+  <% unless bands.empty? %>
+  <div class="wx-section-label" style="margin-top:12px">PASMA HF — ☀ DZIEŃ / ☾ NOC</div>
+  <div class="bands-grid">
+    <% bands.sort.each do |name, times| %>
+    <div class="band-card">
+      <div class="band-name"><%= name %></div>
+      <% [['☀', times['day']], ['☾', times['night']]].each do |icon, cond| %>
+      <div class="band-bar-row">
+        <span class="band-bar-label"><%= icon %></span>
+        <div class="band-bar-track"><div class="band-bar-fill <%= cond_cls(cond) %>" style="width:<%= cond_pct(cond) %>%"></div></div>
+        <span class="band-cond-text <%= cond_text_cls(cond) %>"><%= cond || 'N/A' %></span>
+      </div>
+      <% end %>
+    </div>
+    <% end %>
+  </div>
+  <% end %>
+  <div class="wx-source"><%= wx[:updated] || '—' %> · <%= wx[:source] || 'N0NBH/hamqsl.com' %></div>
+</div>
+
+<!-- BAND PLAN -->
+<div class="panel" style="margin-bottom:16px">
+  <div class="panel-title">band plan // IARU R1 + CB</div>
+  <div style="overflow-x:auto">
+    <table class="bp-table">
+      <thead><tr>
+        <th>Band</th><th>MHz Range</th><th>Modes</th><th>Calling Freq</th><th>Notes</th>
+      </tr></thead>
+      <tbody>
+      <% @d[:band_plan].each do |b| %>
+        <tr class="<%= b[:name] == 'CB' ? 'bp-cb' : '' %>">
+          <td class="bp-band"><%= b[:name] %></td>
+          <td class="bp-range"><%= b[:range] %></td>
+          <td class="bp-modes"><%= b[:modes] %></td>
+          <td class="bp-calling"><%= b[:calling] %></td>
+          <td class="bp-notes"><%= b[:notes] %></td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- RUBY TIP -->
+<% if tip %>
+<div class="panel" style="margin-bottom:16px">
+  <div class="panel-title">ruby tip of the day</div>
+  <div class="tip-title"><%= tip[:title] %></div>
+  <div class="tip-code"><%= tip[:code] %></div>
+  <% if tip[:note] %>
+  <div class="tip-note">→ <%= tip[:note] %></div>
+  <% end %>
+</div>
+<% end %>
+
+<!-- RUBY WEEKLY -->
+<div class="panel">
+  <div class="panel-title">ruby weekly</div>
+  <% if @d[:ruby_news].empty? %>
+    <div style="color:var(--dim)">brak danych</div>
+  <% else %>
+    <% @d[:ruby_news].each_with_index do |item, i| %>
+    <div class="news-item">
+      <div class="news-title">
+        <span class="news-num"><%= "%02d." % (i+1) %></span>
+        <% if item[:link] %><a href="<%= item[:link] %>" target="_blank"><%= item[:title] %></a>
+        <% else %><%= item[:title] %><% end %>
+      </div>
+      <div class="news-meta"><%= item[:date] %></div>
+    </div>
+    <% end %>
+  <% end %>
+</div>
