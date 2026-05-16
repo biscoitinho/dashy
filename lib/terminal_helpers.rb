@@ -182,6 +182,41 @@ module TerminalHelpers
     lines.join
   end
 
+  def t_dx_block(spots)
+    return t_box_row(t_dim('brak spotow')) if spots.empty?
+
+    lines = []
+    spots.each do |s|
+      dx   = t_bgreen(format('%-10s', s[:dx]))
+      freq = t_amber(format('%9.1f', s[:freq]))
+      band = t_dim(format('%-5s', s[:band]))
+      de   = t_dim(format('%-8s', s[:de]))
+      info = t_cyan(s[:info].to_s.slice(0, @tw - 42))
+      lines << t_box_row("#{dx} #{freq} #{band} #{de} #{info}")
+    end
+    lines.join
+  end
+
+  def t_sota_pota_block(data)
+    lines = []
+    [[:sota, 'SOTA'], [:pota, 'POTA']].each do |key, label|
+      spots = data[key] || []
+      lines << t_box_row(t_amber(label))
+      if spots.empty?
+        lines << t_box_row(t_dim('  brak aktywacji'))
+      else
+        spots.each do |s|
+          call = t_bgreen(format('%-10s', s[:call]))
+          freq = t_amber(format('%-9s', s[:freq]))
+          mode = t_dim(format('%-5s', s[:mode]))
+          ref  = t_cyan(format('%-12s', s[:ref]))
+          lines << t_box_row("  #{call} #{freq} #{mode} #{ref} #{t_dim(s[:name])}")
+        end
+      end
+    end
+    lines.join
+  end
+
   def t_air_block(air)
     return t_box_row(t_dim('brak danych o jakosci powietrza')) unless air
 

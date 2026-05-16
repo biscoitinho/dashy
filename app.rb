@@ -47,10 +47,13 @@ Thread.new do
   loop do
     sleep CACHE_TTL - 30 # refresh 30s before expiry
     begin
-      cached(:ruby_news)  { Fetchers.ruby_news }
-      cached(:space_wx)   { Fetchers.space_weather }
-      cached(:air, 3600)  { Fetchers.air_quality }
-    rescue => e
+      cached(:ruby_news)          { Fetchers.ruby_news }
+      cached(:space_wx)           { Fetchers.space_weather }
+      cached(:air, 3600)          { Fetchers.air_quality }
+      cached(:dx_spots, 300)      { Fetchers.dx_spots }
+      cached(:kp_forecast, 3600)  { Fetchers.kp_forecast }
+      cached(:sota_pota, 300)     { Fetchers.sota_pota }
+    rescue StandardError => e
       warn "background prefetch error: #{e.class}: #{e.message}"
     end
   end
@@ -58,15 +61,20 @@ end
 
 def dashboard_data
   {
-    ruby_news: cached(:ruby_news)  { Fetchers.ruby_news },
-    space_wx:  cached(:space_wx)   { Fetchers.space_weather },
-    air:       cached(:air, 3600)  { Fetchers.air_quality },
-    band_plan: BandPlan.all,
-    ruby_tip:  RubyTips.today,
-    cal:       `cal`.chomp,
-    time:      Time.now.strftime('%H:%M:%S %Z'),
-    date:      Time.now.strftime('%A, %d %B %Y'),
-    fetched:   Time.now.strftime('%H:%M')
+    ruby_news:   cached(:ruby_news)         { Fetchers.ruby_news },
+    space_wx:    cached(:space_wx)          { Fetchers.space_weather },
+    air:         cached(:air, 3600)         { Fetchers.air_quality },
+    dx_spots:    cached(:dx_spots, 300)     { Fetchers.dx_spots },
+    kp_forecast: cached(:kp_forecast, 3600) { Fetchers.kp_forecast },
+    sota_pota:   cached(:sota_pota, 300)    { Fetchers.sota_pota },
+    band_plan:   BandPlan.all,
+    ruby_tip:    RubyTips.today,
+    sun:         Fetchers.sun_times,
+    cal:         `cal`.chomp,
+    time:        Time.now.strftime('%H:%M:%S %Z'),
+    utc:         Time.now.utc.strftime('%H:%M UTC'),
+    date:        Time.now.strftime('%A, %d %B %Y'),
+    fetched:     Time.now.strftime('%H:%M')
   }
 end
 
