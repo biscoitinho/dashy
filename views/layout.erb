@@ -28,7 +28,8 @@
 
     .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
 
-    #clock-time { font-size:2em; letter-spacing:4px; text-align:center; padding:8px 0; }
+    #clock-time { font-size:2em; letter-spacing:4px; text-align:center; padding:8px 0 2px; }
+    #clock-utc  { font-size:2em; letter-spacing:4px; text-align:center; padding:2px 0 8px; color:var(--dim); }
     #clock-date { text-align:center; color:var(--dim); }
     #cal-output { white-space:pre; font-size:.92em; line-height:1.7; }
     .cal-today  { color:var(--amber); font-weight:bold; }
@@ -113,7 +114,7 @@
       if(et) et.textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
       if(ed) ed.textContent=`${days[n.getDay()]}, ${n.getDate()} ${mons[n.getMonth()]} ${n.getFullYear()}`;
       const eu = document.getElementById('clock-utc');
-      if(eu) eu.textContent = `${p(n.getUTCHours())}:${p(n.getUTCMinutes())} UTC`;
+      if(eu) eu.textContent = `${p(n.getUTCHours())}:${p(n.getUTCMinutes())}:${p(n.getUTCSeconds())} UTC`;
     }
     setInterval(tick,1000); tick();
     document.addEventListener('DOMContentLoaded',()=>{
