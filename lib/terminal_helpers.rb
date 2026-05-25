@@ -217,6 +217,46 @@ module TerminalHelpers
     lines.join
   end
 
+  def t_iss_block(iss)
+    return t_box_row(t_dim('brak danych o ISS')) unless iss
+
+    passes = iss[:passes] || []
+    freqs  = iss[:freqs]  || {}
+    lines  = []
+
+    if passes.empty?
+      lines << t_box_row(t_dim('brak przelotow w ciagu 24h'))
+    else
+      lines << t_box_row(t_dim('START            KONIEC   CZAS   EL MAX    JAKOSC'))
+      lines << t_box_sep
+      passes.each do |p|
+        start_s = p[:start_local].strftime('%d.%m %H:%M')
+        stop_s  = p[:end_local].strftime('%H:%M')
+        dur_s   = "#{p[:duration_s] / 60}m#{format('%02d', p[:duration_s] % 60)}s"
+        el_s    = format('%5.1f°', p[:max_el])
+        q_color = case p[:quality]
+                  when 'doskonaly' then method(:t_bgreen)
+                  when 'dobry'     then method(:t_green)
+                  when 'slaby'     then method(:t_amber)
+                  else                  method(:t_dim)
+                  end
+        lines << t_box_row(
+          t_white(format('%-16s', start_s)) + t_dim(format('%-8s', stop_s)) +
+          t_cyan(format('%-6s', dur_s)) + t_amber(format('%-9s', el_s)) +
+          q_color.call(p[:quality])
+        )
+      end
+    end
+
+    lines << t_box_sep
+    lines << t_box_row(t_dim('Czestotliwosci ARISS (IARU Region 1):'))
+    lines << t_two_col('  Glos DN  ', t_amber(freqs[:voice_dn].to_s),
+                       '  Glos UP  ', t_amber(freqs[:voice_up].to_s))
+    lines << t_box_row(t_dim('  APRS     ') + t_green(freqs[:aprs].to_s))
+    lines << t_box_row(t_dim('  Rep. DN  ') + t_cyan(freqs[:rep_dn].to_s))
+    lines.join
+  end
+
   def t_air_block(air)
     return t_box_row(t_dim('brak danych o jakosci powietrza')) unless air
 

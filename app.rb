@@ -53,6 +53,7 @@ Thread.new do
       cached(:dx_spots, 300)      { Fetchers.dx_spots }
       cached(:kp_forecast, 3600)  { Fetchers.kp_forecast }
       cached(:sota_pota, 300)     { Fetchers.sota_pota }
+      cached(:iss, 3600)          { Fetchers.iss_passes }
     rescue StandardError => e
       warn "background prefetch error: #{e.class}: #{e.message}"
     end
@@ -67,6 +68,7 @@ def dashboard_data
     dx_spots:    cached(:dx_spots, 300)     { Fetchers.dx_spots },
     kp_forecast: cached(:kp_forecast, 3600) { Fetchers.kp_forecast },
     sota_pota:   cached(:sota_pota, 300)    { Fetchers.sota_pota },
+    iss:         cached(:iss, 3600)         { Fetchers.iss_passes },
     band_plan:   BandPlan.all,
     ruby_tip:    RubyTips.today,
     sun:         Fetchers.sun_times,

@@ -6,6 +6,7 @@ require_relative 'fetchers/sun_times'
 require_relative 'fetchers/dx_cluster'
 require_relative 'fetchers/kp_forecast'
 require_relative 'fetchers/sota_pota'
+require_relative 'fetchers/iss_tracker'
 
 module Fetchers
   HAMQSL_XML = SpaceWeather::HAMQSL_XML
@@ -21,4 +22,5 @@ module Fetchers
   def self.dx_spots = DxCluster.fetch_spots
   def self.kp_forecast = KpForecast.fetch_data
   def self.sota_pota = SotaPota.fetch_all
+  def self.iss_passes = IssTracker.fetch_passes
 end
