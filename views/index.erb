@@ -132,6 +132,52 @@
   </div>
 </div>
 
+<!-- ISS TRACKER -->
+<div class="panel" style="margin-bottom:16px">
+  <div class="panel-title">iss tracker // przeloty nad Trójmiastem</div>
+  <% iss = @d[:iss] || {}; iss_passes = iss[:passes] || []; freqs = iss[:freqs] || {} %>
+  <% if iss_passes.empty? %>
+    <div style="color:var(--dim)">brak przelotów w ciągu 24h</div>
+  <% else %>
+    <table class="bp-table" style="margin-bottom:12px">
+      <thead><tr><th>Start</th><th>Koniec</th><th>Czas</th><th>El max</th><th>Jakość</th></tr></thead>
+      <tbody>
+      <% iss_passes.each do |p| %>
+        <%
+          dur   = '%dm %02ds' % [p[:duration_s] / 60, p[:duration_s] % 60]
+          qcls  = case p[:quality]
+                  when 'doskonaly' then 'prop-good'
+                  when 'dobry'     then 'prop-good'
+                  when 'slaby'     then 'prop-ok'
+                  else                  ''
+                  end
+        %>
+        <tr>
+          <td class="bp-band"><%= p[:start_local].strftime('%d.%m %H:%M') %></td>
+          <td style="color:var(--dim)"><%= p[:end_local].strftime('%H:%M') %></td>
+          <td style="color:var(--green)"><%= dur %></td>
+          <td style="color:var(--amber)"><%= p[:max_el] %>°</td>
+          <td class="<%= qcls %>"><%= p[:quality] %></td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  <% end %>
+  <div class="wx-section-label">ARISS — CZĘSTOTLIWOŚCI (IARU Region 1)</div>
+  <div class="wx-grid" style="margin-top:4px">
+    <div>
+      <div class="wx-row"><span class="wx-label">Głos DN</span><span class="wx-val"><%= freqs[:voice_dn] %></span></div>
+      <div class="wx-row"><span class="wx-label">Głos UP</span><span class="wx-val"><%= freqs[:voice_up] %></span></div>
+      <div class="wx-row"><span class="wx-label">APRS</span>   <span class="wx-val"><%= freqs[:aprs] %></span></div>
+    </div>
+    <div>
+      <div class="wx-row"><span class="wx-label">Repeater DN</span><span class="wx-val"><%= freqs[:rep_dn] %></span></div>
+      <div class="wx-row"><span class="wx-label">Repeater UP</span><span class="wx-val"><%= freqs[:rep_up] %></span></div>
+    </div>
+  </div>
+  <div class="wx-source" style="margin-top:8px">TLE: celestrak.org · predykcja lokalna · cache 1h</div>
+</div>
+
 <!-- DX CLUSTER -->
 <div class="panel" style="margin-bottom:16px">
   <div class="panel-title">dx cluster // dxsummit.fi</div>
